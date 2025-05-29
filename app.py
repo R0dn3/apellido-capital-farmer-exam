@@ -100,3 +100,91 @@ def generar_propuesta_texto(nombre_cliente, tipo_servicio, complejidad, ajuste, 
         f"Quedamos a su disposición para cualquier consulta adicional.\n\n"
         f"Atentamente,\nCapital & Farmer Abogados"
     )
+
+# Ruta principal para mostrar el formulario HTML al usuario
+@app.route('/')
+def form():
+    return render_template('form.html')
+
+# Ruta que procesa el formulario, genera la cotización y responde con JSON
+@app.route('/generar', methods=['POST'])
+def generar():
+    try:
+        # Obtener los datos enviados por POST desde el formulario
+        nombre = request.form.get('nombre', '').strip()
+        email = request.form.get('email', '').strip()
+        tipo = request.form.get('tipo_servicio', '').strip()
+        descripcion = request.form.get('descripcion', '').strip()
+
+        # Validaciones para asegurar que no falten datos obligatorios
+        if not nombre or not email or not tipo or not descripcion:
+            return jsonify({"error": "Todos los campos son obligatorios."}), 400
+
+        # Validar formato del email
+        if not es_email_valido(email):
+            return jsonify({"error": "Email inválido."}), 400
+
+        # Precios base para cada tipo de servicio
+        precios = {
+            "Constitución de empresa": 1500,
+            "Defensa laboral": 2000,
+            "Consultoría tributaria": 800
+        }
+
+        # Obtener el precio base según el tipo de servicio; error si no existe
+        precio_base = precios.get(tipo)
+        if precio_base is None:
+            return jsonify({"error": "Tipo de servicio inválido."}), 400
+
+        # Evaluar la complejidad, ajuste y servicios adicionales para la cotización
+        complejidad, ajuste_porcentaje, servicios_adicionales = evaluar_complejidad_ajuste_servicios(tipo, descripcion)
+
+        # Calcular precio final aplicando el porcentaje de ajuste
+        precio_final = int(precio_base * (1 + ajuste_porcentaje / 100))
+
+        # Generar número único para la cotización
+        numero = f"COT-2025-{str(uuid.uuid4())[:8].upper()}"
+
+        # Crear el objeto Cotizacion y guardarlo en la base de datos
+        cotizacion = Cotizacion(
+            numero=numero,
+            nombre=nombre,
+            email=email,
+            tipo_servicio=tipo,
+            descripcion=descripcion,
+            precio=precio_final
+        )
+        db.session.add(cotizacion)
+        db.session.commit()
+
+        # Generar el texto de propuesta para mostrar al cliente
+        propuesta = generar_propuesta_texto(nombre, tipo, complejidad, ajuste_porcentaje, servicios_adicionales)
+
+        # Retornar toda la información en formato JSON para que el frontend la muestre
+        return jsonify({
+            "numero": numero,
+            "precio_base": precio_base,
+            "precio_final": precio_final,
+            "fecha": datetime.utcnow().isoformat(),
+            "cliente": nombre,
+            "email": email,
+            "tipo_servicio": tipo,
+            "descripcion": descripcion,
+            "complejidad": complejidad,
+            "ajuste": f"{ajuste_porcentaje}%",
+            "servicios_adicionales": servicios_adicionales,
+            "propuesta": propuesta
+        })
+
+    except Exception as e:
+        # Registrar error inesperado en el log y devolver mensaje genérico
+        app.logger.error(f"Error inesperado: {e}")
+        return jsonify({"error": "Ocurrió un error inesperado. Intente nuevamente."}), 500
+
+# Ejecutar la aplicación solo si se corre directamente este archivo
+if __name__ == '__main__':
+    # Crear tablas en la base de datos si no existen antes de iniciar el servidor
+    with app.app_context():
+        db.create_all()
+
+    app.run(debug=True)  # Ejecutar en modo debug para facilitar desarrollo
