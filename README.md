@@ -82,3 +82,21 @@ Desplegaría la aplicación en Railway o Render, por su bajo costo y facilidad d
 
 ## 5. Seguridad
 Implementaría validaciones en backend, sanitización de entradas y HTTPS en producción. También ocultaría las claves y configuraciones sensibles usando variables de entorno (.env) y evitaría exponer datos personales en logs.
+
+## 📷 Capturas de Funcionamiento
+
+Ejecucion valida ejecutando el codigo: python app.py:
+
+![{65B10E0C-43CC-4556-84E1-2E9119841B7D}](https://github.com/user-attachments/assets/7c376698-4291-4e3c-befc-69acdcbe2103)
+
+Captura del formulario con sus respectivos secciones de llenado: 
+
+![{BF5AB2A2-6AB9-450B-A33D-D509DED8DED2}](https://github.com/user-attachments/assets/2d7dd567-94da-4736-861a-a520f59342f1)
+
+Devolucion de la cotizacion:
+
+![{0E8FA87B-BC95-4D34-9771-28A9DB41A325}](https://github.com/user-attachments/assets/2a85bc67-4000-4cdb-88e4-49c39c328747)
+
+Datos guardados en la base de datos elegida SQLite
+
+![{4AC22031-2B01-47E1-968D-DA9018B0FE06}](https://github.com/user-attachments/assets/b63217a0-56b4-43c6-8ada-c6ff88b51ac3)
