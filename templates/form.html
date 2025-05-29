@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Generar Cotización Legal - Capital & Farmer</title>
+    <style>
+        /* Estilos básicos para el cuerpo */
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 700px;
+            margin: 30px auto;
+            padding: 0 15px;
+            background-color: #fafafa;
+            color: #333;
+        }
+
+        /* Colores para encabezados */
+        h1,
+        h2,
+        h3 {
+            color: #004080;
+        }
+
+        /* Negrita en las etiquetas */
+        label {
+            font-weight: bold;
+        }
+
+        /* Estilos para inputs, select y textarea */
+        input[type="text"],
+        input[type="email"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 8px;
+            margin-top: 4px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+
+        /* Botón con color corporativo y estilos */
+        button {
+            background-color: #004080;
+            color: white;
+            padding: 10px 18px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        /* Cambio de color al pasar el cursor */
+        button:hover {
+            background-color: #003366;
+        }
+
+        /* Contenedor del resultado, inicialmente oculto */
+        #resultado {
+            margin-top: 30px;
+            background-color: white;
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 6px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            display: none; /* Oculto hasta que se genere la cotización */
+        }
+
+        /* Formato para la propuesta profesional en texto preformateado */
+        pre {
+            white-space: pre-wrap;
+            font-family: "Courier New", Courier, monospace;
+            background-color: #f0f0f0;
+            padding: 12px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Título principal -->
+    <h1>Formulario de Cotización Legal</h1>
+    
+    <!-- Formulario para enviar datos -->
+    <form id="cotizacionForm">
+        <!-- Campo para nombre -->
+        <label for="nombre">Nombre:</label>
+        <input type="text" id="nombre" name="nombre" required />
+
+        <!-- Campo para email -->
+        <label for="email">Email:</label>
+        <input type="email" id="email" name="email" required />
+
+        <!-- Selector para tipo de servicio -->
+        <label for="tipo_servicio">Tipo de Servicio:</label>
+        <select id="tipo_servicio" name="tipo_servicio" required>
+            <option value="">Seleccione un servicio</option>
+            <option value="Constitución de empresa">Constitución de empresa</option>
+            <option value="Defensa laboral">Defensa laboral</option>
+            <option value="Consultoría tributaria">Consultoría tributaria</option>
+        </select>
+
+        <!-- Campo para descripción detallada del caso -->
+        <label for="descripcion">Descripción del caso:</label>
+        <textarea id="descripcion" name="descripcion" rows="5" required></textarea>
+
+        <!-- Botón para enviar el formulario -->
+        <button type="submit">Generar Cotización</button>
+    </form>
+
+    <hr />
+
+    <!-- Contenedor donde se mostrarán los resultados -->
+    <div id="resultado">
+        <h2>Resultado de la Cotización</h2>
+        <p><strong>Número de Cotización:</strong> <span id="numero"></span></p>
+        <p><strong>Cliente:</strong> <span id="cliente"></span></p>
+        <p><strong>Email:</strong> <span id="resultado_email"></span></p>
+        <p><strong>Tipo de Servicio:</strong> <span id="resultado_tipo_servicio"></span></p>
+        <p><strong>Descripción:</strong> <span id="resultado_descripcion"></span></p>
+        <p><strong>Precio Base:</strong> <span id="precio_base"></span></p>
+        <p><strong>Complejidad:</strong> <span id="complejidad"></span></p>
+        <p><strong>Ajuste:</strong> <span id="ajuste"></span></p>
+        <p><strong>Precio Final:</strong> <span id="precio_final"></span></p>
+        <p><strong>Servicios Adicionales:</strong> <span id="servicios_adicionales"></span></p>
+
+        <!-- Propuesta profesional en texto preformateado -->
+        <h3>Propuesta Profesional</h3>
+        <pre id="propuesta"></pre>
+    </div>
+
+    <script>
+        // Evento para manejar el envío del formulario sin recargar la página
+        document.getElementById('cotizacionForm').addEventListener('submit', async function (e) {
+            e.preventDefault(); // Evita el comportamiento por defecto de recargar la página
+
+            // Recoge los datos del formulario
+            const formData = new FormData(this);
+
+            // Convierte los datos a formato URL encoded para enviarlos en POST
+            const formParams = new URLSearchParams([...formData]);
+
+            try {
+                // Envía la solicitud POST al endpoint /generar del backend Flask
+                const response = await fetch('/generar', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: formParams
+                });
+
+                // Si la respuesta no es correcta lanza un error
+                if (!response.ok) throw new Error('Error en la respuesta del servidor');
+
+                // Parsear la respuesta JSON
+                const data = await response.json();
+
+                // Mostrar el contenedor de resultados
+                document.getElementById('resultado').style.display = 'block';
+
+                // Rellenar cada campo con la información recibida
+                document.getElementById('numero').textContent = data.numero;
+                document.getElementById('cliente').textContent = data.cliente;
+                document.getElementById('resultado_email').textContent = data.email;
+                document.getElementById('resultado_tipo_servicio').textContent = data.tipo_servicio;
+                document.getElementById('resultado_descripcion').textContent = data.descripcion;
+
+                document.getElementById('precio_base').textContent = data.precio_base;
+                document.getElementById('complejidad').textContent = data.complejidad;
+                document.getElementById('ajuste').textContent = data.ajuste;
+                document.getElementById('precio_final').textContent = data.precio_final;
+
+                // Mostrar servicios adicionales o 'Ninguno' si no hay
+                document.getElementById('servicios_adicionales').textContent = data.servicios_adicionales.length > 0
+                    ? data.servicios_adicionales.join(', ')
+                    : 'Ninguno';
+
+                // Mostrar la propuesta profesional formateada
+                document.getElementById('propuesta').textContent = data.propuesta;
+
+            } catch (error) {
+                // Mostrar alerta en caso de error
+                alert('Hubo un problema al generar la cotización: ' + error.message);
+            }
+        });
+    </script>
+</body>
+
+</html>
